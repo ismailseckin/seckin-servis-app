@@ -276,6 +276,47 @@ body {
 
 .back-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); padding: 6px 12px; cursor: pointer; font-size: 18px; line-height: 1; }
 .page-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+
+/* ── GİRİŞ EKRANI ── */
+.login-screen {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: var(--bg); align-items: center; justify-content: center; padding: 24px;
+}
+.login-screen.show { display: flex; }
+.login-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px 24px; width: 100%; max-width: 380px;
+}
+.login-logo {
+  width: 56px; height: 56px; background: var(--gold);
+  border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 20px; color: #fff; margin: 0 auto 20px;
+}
+.login-title { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.login-sub   { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.login-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.login-field label { font-size: 12px; color: var(--muted); font-weight: 500; }
+.login-field input {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 15px;
+  padding: 12px 14px; outline: none; font-family: inherit;
+}
+.login-field input:focus { border-color: var(--blue); }
+.login-btn {
+  width: 100%; background: var(--blue); border: none;
+  border-radius: 10px; color: #fff; font-size: 15px; font-weight: 700;
+  padding: 14px; cursor: pointer; margin-top: 8px;
+}
+.login-btn:active { background: #2562a0; }
+.login-error {
+  background: rgba(192,57,43,0.15); border: 1px solid rgba(192,57,43,0.3);
+  border-radius: 8px; color: #e74c3c; font-size: 13px;
+  padding: 10px 14px; margin-top: 12px; display: none; text-align: center;
+}
+.logout-btn {
+  background: rgba(255,255,255,0.12); border: none; border-radius: 8px;
+  color: #fff; font-size: 12px; padding: 6px 10px; cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -286,9 +327,31 @@ body {
     <h1>Seçkin Servis</h1>
     <p id="header-sub">Teknik Kayıt Sistemi</p>
   </div>
-  <button class="header-btn" id="header-action-btn" onclick="startNewRecord()">+ Yeni Kayıt</button>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="header-btn" id="header-action-btn" onclick="startNewRecord()">+ Yeni Kayıt</button>
+    <button class="logout-btn" id="logout-btn" onclick="doLogout()" style="display:none">Çıkış</button>
+  </div>
 </header>
 <div id="sync-status" style="display:none;position:fixed;top:56px;left:0;right:0;z-index:99;background:#2E6DAD;color:#fff;font-size:12px;text-align:center;padding:4px;"></div>
+
+<!-- GİRİŞ EKRANI -->
+<div class="login-screen show" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">SS</div>
+    <div class="login-title">Seçkin Servis</div>
+    <div class="login-sub">Teknik Kayıt Sistemine Giriş</div>
+    <div class="login-field">
+      <label>E-posta</label>
+      <input type="email" id="login-email" placeholder="ornek@email.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Şifre</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Giriş Yap</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
 
 <div class="app">
 
@@ -352,23 +415,70 @@ const FB_CONFIG = {
 let db = null;
 let fbReady = false;
 let _fbFS = {};
+let _auth = null;
+let currentUser = null;
 
 async function initFirebase() {
   try {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
     const { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } =
       await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } =
+      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+
     const app = initializeApp(FB_CONFIG);
     db = getFirestore(app);
     _fbFS = { collection, getDocs, doc, setDoc, deleteDoc };
-    fbReady = true;
-    showSyncStatus("Buluta bağlanıyor...");
-    await syncFromCloud();
-    showSyncStatus("");
+    _auth = getAuth(app);
+    _authFns = { signInWithEmailAndPassword, signOut };
+
+    onAuthStateChanged(_auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('login-screen').classList.remove('show');
+        document.getElementById('logout-btn').style.display = 'block';
+        fbReady = true;
+        showSyncStatus("Buluta bağlanıyor...");
+        await syncFromCloud();
+        showSyncStatus("");
+      } else {
+        currentUser = null;
+        fbReady = false;
+        document.getElementById('login-screen').classList.add('show');
+        document.getElementById('logout-btn').style.display = 'none';
+      }
+    });
   } catch(e) {
     console.warn("Firebase offline:", e);
     showSyncStatus("");
   }
+}
+
+let _authFns = {};
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent = 'E-posta ve şifre gerekli'; errEl.style.display = 'block'; return; }
+  try {
+    const btn = document.querySelector('.login-btn');
+    btn.textContent = 'Giriş yapılıyor...'; btn.disabled = true;
+    await _authFns.signInWithEmailAndPassword(_auth, email, pass);
+    btn.textContent = 'Giriş Yap'; btn.disabled = false;
+  } catch(e) {
+    const btn = document.querySelector('.login-btn');
+    btn.textContent = 'Giriş Yap'; btn.disabled = false;
+    const msgs = { 'auth/invalid-credential':'E-posta veya şifre hatalı', 'auth/user-not-found':'Kullanıcı bulunamadı', 'auth/wrong-password':'Şifre hatalı', 'auth/too-many-requests':'Çok fazla deneme, bekleyin' };
+    errEl.textContent = msgs[e.code] || 'Giriş başarısız, tekrar deneyin';
+    errEl.style.display = 'block';
+  }
+}
+
+async function doLogout() {
+  await _authFns.signOut(_auth);
+  showList();
 }
 
 function showSyncStatus(msg) {
