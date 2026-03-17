@@ -284,6 +284,7 @@ body {
   </div>
   <button class="header-btn" id="header-action-btn" onclick="startNewRecord()">+ Yeni Kayıt</button>
 </header>
+<div id="sync-status" style="display:none;position:fixed;top:56px;left:0;right:0;z-index:99;background:#2E6DAD;color:#fff;font-size:12px;text-align:center;padding:4px;"></div>
 
 <div class="app">
 
@@ -334,9 +335,79 @@ body {
 </div>
 
 <script>
-const DB_KEY = 'seckin_records_v2';
-function getRecords() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
-function saveRecords(r) { localStorage.setItem(DB_KEY, JSON.stringify(r)); }
+// ── FİREBASE BAĞLANTISI ─────────────────────────────
+const FB_CONFIG = {
+  apiKey: "AIzaSyDm0VU9EFDv5WEFSmH9fr603gT7c4v9arM",
+  authDomain: "seckin-servis.firebaseapp.com",
+  projectId: "seckin-servis",
+  storageBucket: "seckin-servis.firebasestorage.app",
+  messagingSenderId: "1076585878636",
+  appId: "1:1076585878636:web:ec1013872b3ca678883449"
+};
+
+let db = null;
+let fbReady = false;
+let _fbFS = {};
+
+async function initFirebase() {
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } =
+      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const app = initializeApp(FB_CONFIG);
+    db = getFirestore(app);
+    _fbFS = { collection, getDocs, doc, setDoc, deleteDoc };
+    fbReady = true;
+    showSyncStatus("Buluta bağlanıyor...");
+    await syncFromCloud();
+    showSyncStatus("");
+  } catch(e) {
+    console.warn("Firebase offline:", e);
+    showSyncStatus("");
+  }
+}
+
+function showSyncStatus(msg) {
+  let el = document.getElementById("sync-status");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? "block" : "none";
+}
+
+const DB_KEY = "seckin_records_v2";
+function getLocalRecords() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
+function saveLocalRecords(r) { localStorage.setItem(DB_KEY, JSON.stringify(r)); }
+
+async function syncFromCloud() {
+  if (!fbReady || !db) return;
+  try {
+    const snap = await _fbFS.getDocs(_fbFS.collection(db, "records"));
+    const cloud = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (cloud.length > 0) { saveLocalRecords(cloud); }
+    renderList();
+  } catch(e) { console.warn("Sync hatası:", e); }
+}
+
+async function saveToCloud(record) {
+  if (!fbReady || !db) return;
+  try {
+    const r = { ...record, photos: [] }; // fotoğraflar sadece lokalde
+    await _fbFS.setDoc(_fbFS.doc(db, "records", record.id), r);
+  } catch(e) { console.warn("Kayıt hatası:", e); }
+}
+
+async function deleteFromCloud(id) {
+  if (!fbReady || !db) return;
+  try { await _fbFS.deleteDoc(_fbFS.doc(db, "records", id)); }
+  catch(e) { console.warn("Silme hatası:", e); }
+}
+
+function getRecords() { return getLocalRecords(); }
+
+function saveRecords(records) {
+  saveLocalRecords(records);
+  records.forEach(r => saveToCloud(r));
+}
 
 let currentFilter = 'all';
 let deleteId = null;
@@ -782,11 +853,15 @@ function showToast(msg,err=false) {
 function askDelete(id) { deleteId=id; document.getElementById('delete-overlay').classList.add('show'); }
 function closeModal() { document.getElementById('delete-overlay').classList.remove('show'); deleteId=null; }
 function confirmDelete() {
-  if(!deleteId) return; saveRecords(getRecords().filter(r=>r.id!==deleteId));
+  if(!deleteId) return;
+  const id = deleteId;
+  saveLocalRecords(getRecords().filter(r=>r.id!==id));
+  deleteFromCloud(id);
   closeModal(); showToast('Kayıt silindi'); showList();
 }
 
 renderList();
+initFirebase();
 
 // Service Worker kaydı (PWA - offline destek)
 if ('serviceWorker' in navigator) {
