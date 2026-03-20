@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#1B3F6E">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Seçkin Servis — Teknik Kayıt</title>
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <style>
         :root {
             --bg: #0f1923;
@@ -1835,7 +1835,7 @@
         // Service Worker kaydı (PWA - offline destek)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(() => { });
+                navigator.serviceWorker.register('./sw.js').catch(() => { });
             });
         }
     </script>
