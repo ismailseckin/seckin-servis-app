@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>SS Teknik — İkon Tasarımları</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; font-family: -apple-system, sans-serif; color: #fff; padding: 30px; }
+  h1 { text-align: center; color: #C8960A; margin-bottom: 8px; font-size: 18px; letter-spacing: 2px; }
+  p.sub { text-align: center; color: #555; font-size: 12px; margin-bottom: 30px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; }
+  .card {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    background: #1a1a1a; border-radius: 16px; padding: 20px;
+    border: 1px solid #2a2a2a;
+  }
+  .label { font-size: 13px; color: #888; letter-spacing: 1px; text-align: center; }
+  .name { font-size: 15px; font-weight: 700; text-align: center; }
+  canvas { border-radius: 22%; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+  .btns { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .btn-dl {
+    background: #C8960A; color: #000; border: none; border-radius: 8px;
+    padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer;
+    text-align: center; letter-spacing: 0.5px;
+  }
+  .btn-dl:hover { background: #f0b429; }
+</style>
+</head>
+<body>
+<h1>SS TEKNİK — İKON TASARIMLARI</h1>
+<p class="sub">Beğendiğinizi seçin → İndir butonuna basın → Müdüre bildirin</p>
+<div class="grid" id="grid"></div>
+
+<script>
+const SIZE = 256;
+const R = SIZE / 2;
+
+function makeCanvas(id) {
+  const c = document.createElement('canvas');
+  c.width = SIZE; c.height = SIZE; c.id = id;
+  return c;
+}
+
+// ────────────────────────────────────────────
+// TASARIM A — Lazer Kesim (Kırmızı Vurgu)
+// ────────────────────────────────────────────
+function drawA(canvas) {
+  const c = canvas.getContext('2d');
+  // Arka plan
+  c.fillStyle = '#0d0d0d';
+  c.beginPath(); c.roundRect(0,0,SIZE,SIZE,SIZE*0.18); c.fill();
+
+  // Köşe dekor çizgileri (mühendislik köşesi)
+  c.strokeStyle = '#E63946'; c.lineWidth = 2;
+  const m = 18, L = 28;
+  [[m,m],[SIZE-m,m],[m,SIZE-m],[SIZE-m,SIZE-m]].forEach(([x,y]) => {
+    const sx = x === m ? 1 : -1, sy = y === m ? 1 : -1;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x+sx*L, y); c.stroke();
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x, y+sy*L); c.stroke();
+  });
+
+  // İnce yatay çizgi (crosshair yatay)
+  c.strokeStyle = 'rgba(230,57,70,0.25)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, R); c.lineTo(SIZE, R); c.stroke();
+
+  // SS yazısı
+  c.font = 'bold 96px -apple-system, "Helvetica Neue", sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = '#fff';
+  c.fillText('SS', R, R - 16);
+
+  // Alt çizgi + TEKNİK
+  c.strokeStyle = '#E63946'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(R-45, R+36); c.lineTo(R+45, R+36); c.stroke();
+  c.font = '600 18px -apple-system, sans-serif';
+  c.fillStyle = '#E63946';
+  c.letterSpacing = '3px';
+  c.fillText('TEKNİK', R, R + 54);
+}
+
+// ────────────────────────────────────────────
+// TASARIM B — Elektrik Mavi / Siyan
+// ────────────────────────────────────────────
+function drawB(canvas) {
+  const c = canvas.getContext('2d');
+  // Arka plan gradient
+  const g = c.createLinearGradient(0,0,SIZE,SIZE);
+  g.addColorStop(0,'#0a0f1e'); g.addColorStop(1,'#0d1f3a');
+  c.fillStyle = g;
+  c.beginPath(); c.roundRect(0,0,SIZE,SIZE,SIZE*0.18); c.fill();
+
+  // Daire zemin
+  c.beginPath(); c.arc(R,R-10,74,0,Math.PI*2);
+  c.fillStyle = 'rgba(0,200,255,0.06)'; c.fill();
+  c.strokeStyle = 'rgba(0,200,255,0.3)'; c.lineWidth = 1.5; c.stroke();
+
+  // Siyan aksan noktası — sağ üst
+  c.beginPath(); c.arc(SIZE-30, 30, 5, 0, Math.PI*2);
+  c.fillStyle = '#00C8FF'; c.fill();
+  // küçük çizgiler
+  c.strokeStyle = '#00C8FF'; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(SIZE-30,38); c.lineTo(SIZE-30,54); c.stroke();
+  c.beginPath(); c.moveTo(SIZE-22,30); c.lineTo(SIZE-14,30); c.stroke();
+
+  // SS
+  c.font = 'bold 92px -apple-system, "Helvetica Neue", sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = '#ffffff';
+  c.fillText('SS', R, R - 14);
+
+  // Alt çizgi + TEKNIK
+  c.strokeStyle = '#00C8FF'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(R-38, R+34); c.lineTo(R+38, R+34); c.stroke();
+  c.font = '700 16px -apple-system, sans-serif';
+  c.fillStyle = '#00C8FF';
+  c.fillText('TEKNİK', R, R + 52);
+}
+
+// ────────────────────────────────────────────
+// TASARIM C — Sanayi Turuncu / Çelik
+// ────────────────────────────────────────────
+function drawC(canvas) {
+  const c = canvas.getContext('2d');
+  // Arka plan
+  c.fillStyle = '#111418';
+  c.beginPath(); c.roundRect(0,0,SIZE,SIZE,SIZE*0.18); c.fill();
+
+  // Üst turuncu bant
+  c.fillStyle = '#FF6B35';
+  c.fillRect(0, 0, SIZE, 8);
+  // Köşe yumuşat
+  c.fillStyle = '#111418';
+  c.beginPath(); c.roundRect(0,0,SIZE*0.18,SIZE*0.18,SIZE*0.18); c.fill();
+  c.beginPath(); c.roundRect(SIZE-SIZE*0.18,0,SIZE*0.18,SIZE*0.18,SIZE*0.18); c.fill();
+
+  // Alt turuncu bant
+  c.fillStyle = '#FF6B35';
+  c.fillRect(0, SIZE-8, SIZE, 8);
+  c.fillStyle = '#111418';
+  c.beginPath(); c.roundRect(0,SIZE-SIZE*0.18,SIZE*0.18,SIZE*0.18,SIZE*0.18); c.fill();
+  c.beginPath(); c.roundRect(SIZE-SIZE*0.18,SIZE-SIZE*0.18,SIZE*0.18,SIZE*0.18,SIZE*0.18); c.fill();
+
+  // Çelik panel arka
+  c.fillStyle = '#1e2228';
+  const pad = 22;
+  c.fillRect(pad, pad+6, SIZE-pad*2, SIZE-pad*2-12);
+
+  // SS büyük
+  c.font = 'bold 100px -apple-system, "Helvetica Neue", sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = '#ffffff';
+  c.fillText('SS', R, R - 12);
+
+  // TEKNİK
+  c.font = '700 15px -apple-system, sans-serif';
+  c.fillStyle = '#FF6B35';
+  c.fillText('TEKNİK', R, R + 48);
+}
+
+// ────────────────────────────────────────────
+// TASARIM D — Altın Mühür (Premium)
+// ────────────────────────────────────────────
+function drawD(canvas) {
+  const c = canvas.getContext('2d');
+  // Koyu lacivert arka plan
+  const g = c.createRadialGradient(R,R,20,R,R,SIZE*0.7);
+  g.addColorStop(0,'#1B2A4A'); g.addColorStop(1,'#0a0f1a');
+  c.fillStyle = g;
+  c.beginPath(); c.roundRect(0,0,SIZE,SIZE,SIZE*0.18); c.fill();
+
+  // Altıgen çiz
+  c.save();
+  c.translate(R, R-8);
+  c.beginPath();
+  for(let i=0;i<6;i++){
+    const a = Math.PI/180*(60*i-30);
+    const x = 80*Math.cos(a), y = 80*Math.sin(a);
+    i===0 ? c.moveTo(x,y) : c.lineTo(x,y);
+  }
+  c.closePath();
+  c.strokeStyle = '#C8960A'; c.lineWidth = 2.5; c.stroke();
+  c.fillStyle = 'rgba(200,150,10,0.05)'; c.fill();
+  c.restore();
+
+  // SS
+  c.font = 'bold 90px -apple-system, "Helvetica Neue", sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = '#ffffff';
+  c.fillText('SS', R, R - 8);
+
+  // Alt çizgi + TEKNİK
+  c.strokeStyle = '#C8960A'; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(R-30,R+44); c.lineTo(R+30,R+44); c.stroke();
+  c.font = '600 14px -apple-system, sans-serif';
+  c.fillStyle = '#C8960A';
+  c.fillText('TEKNİK', R, R + 60);
+}
+
+// ────────────────────────────────────────────
+// TASARIM E — Zümrüt Yeşil / Matrix Teknik
+// ────────────────────────────────────────────
+function drawE(canvas) {
+  const c = canvas.getContext('2d');
+  c.fillStyle = '#060f0a';
+  c.beginPath(); c.roundRect(0,0,SIZE,SIZE,SIZE*0.18); c.fill();
+
+  // Grid noktalara
+  c.fillStyle = 'rgba(0,200,100,0.12)';
+  for(let x=20;x<SIZE;x+=20) for(let y=20;y<SIZE;y+=20) {
+    c.beginPath(); c.arc(x,y,1,0,Math.PI*2); c.fill();
+  }
+
+  // Yatay tarama çizgisi
+  c.strokeStyle = 'rgba(0,200,100,0.2)'; c.lineWidth = 1;
+  for(let y=30; y<SIZE; y+=14) {
+    c.beginPath(); c.moveTo(20,y); c.lineTo(SIZE-20,y); c.stroke();
+  }
+
+  // SS
+  c.font = 'bold 96px monospace';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  // Glow efekti
+  c.shadowColor = '#00C864'; c.shadowBlur = 20;
+  c.fillStyle = '#00C864';
+  c.fillText('SS', R, R - 14);
+  c.shadowBlur = 0;
+
+  // Alt çizgi + TEKNİK
+  c.strokeStyle = '#00C864'; c.lineWidth = 1;
+  c.setLineDash([4,3]);
+  c.beginPath(); c.moveTo(R-50, R+34); c.lineTo(R+50, R+34); c.stroke();
+  c.setLineDash([]);
+  c.font = '700 15px monospace';
+  c.fillStyle = '#00C864';
+  c.fillText('TEKNİK', R, R + 52);
+}
+
+// ── Kartları oluştur ──────────────────────────────
+const designs = [
+  { id:'A', name:'Kırmızı Lazer', fn: drawA },
+  { id:'B', name:'Elektrik Mavi', fn: drawB },
+  { id:'C', name:'Sanayi Turuncu', fn: drawC },
+  { id:'D', name:'Altın Mühür', fn: drawD },
+  { id:'E', name:'Matrix Yeşil', fn: drawE },
+];
+
+const grid = document.getElementById('grid');
+
+designs.forEach(({ id, name, fn }) => {
+  const canvas = makeCanvas('cv-'+id);
+  fn(canvas);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'label';
+  lbl.textContent = 'TASARIM ' + id;
+
+  const nm = document.createElement('div');
+  nm.className = 'name';
+  nm.textContent = name;
+
+  const btn = document.createElement('button');
+  btn.className = 'btn-dl';
+  btn.textContent = '⬇ İndir (PNG)';
+  btn.onclick = () => {
+    const a = document.createElement('a');
+    a.download = 'ss-teknik-icon-' + id + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+
+  card.appendChild(lbl);
+  card.appendChild(canvas);
+  card.appendChild(nm);
+  card.appendChild(btn);
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>
