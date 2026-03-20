@@ -1668,7 +1668,22 @@
 
         function finalSave() {
             saveStepData();
-            const record = { ...draft, id: editingId || Date.now().toString(), updatedAt: new Date().toISOString(), photos: photoData };
+            const now = new Date().toISOString();
+            const userEmail = (currentUser && currentUser.email) ? currentUser.email : 'bilinmiyor';
+            let record;
+            if (editingId) {
+                // Güncelleme: createdAt ve createdBy KORUNUR, sadece updatedAt/updatedBy güncellenir
+                const existing = getRecords().find(r => r.id === editingId) || {};
+                record = { ...draft, id: editingId, photos: photoData,
+                    createdAt: existing.createdAt || now,
+                    createdBy: existing.createdBy || userEmail,
+                    updatedAt: now, updatedBy: userEmail };
+            } else {
+                // Yeni kayıt
+                record = { ...draft, id: Date.now().toString(), photos: photoData,
+                    createdAt: now, createdBy: userEmail,
+                    updatedAt: now, updatedBy: userEmail };
+            }
             let records = getRecords();
             records = editingId ? records.map(r => r.id === editingId ? record : r) : [record, ...records];
             saveRecords(records);
@@ -1777,13 +1792,19 @@
       ${r.diagnosis ? `<div class="detail-text">${esc(r.diagnosis)}</div>` : ''}
       ${r.measurements ? `<p style="font-size:13px;color:var(--muted);margin-top:8px">Ölçümler: ${esc(r.measurements)}</p>` : ''}
     </div>`: ''}
-    ${attempts ? `<div class="detail-section"><div class="detail-section-title">Denemeler & Sonuçlar</div>${attempts}</div>` : ''}
+    ${attempts ? `<div class="detail-section"><div class="detail-section-title">Denemeler &amp; Sonuçlar</div>${attempts}</div>` : ''}
     ${r.solution ? `<div class="detail-section"><div class="detail-section-title">Kesin Çözüm</div><div class="detail-text">${esc(r.solution)}</div></div>` : ''}
     ${r.parts ? `<div class="detail-section"><div class="detail-section-title">Kullanılan Parçalar</div><div class="detail-text">${esc(r.parts)}</div></div>` : ''}
-    ${params ? `<div class="detail-section"><div class="detail-section-title">Parametre & Ayar Değerleri</div>
+    ${params ? `<div class="detail-section"><div class="detail-section-title">Parametre &amp; Ayar Değerleri</div>
       <table class="param-table"><thead><tr><th>Parametre</th><th>Değer</th></tr></thead><tbody>${params}</tbody></table>
-    </div>`: ''}
-    ${r.notes ? `<div class="detail-section"><div class="detail-section-title">Kişisel Notlar</div><div class="detail-text">${esc(r.notes)}</div></div>` : ''}`;
+    </div>` : ''}
+    ${r.notes ? `<div class="detail-section"><div class="detail-section-title">Kişisel Notlar</div><div class="detail-text">${esc(r.notes)}</div></div>` : ''}
+    ${(r.createdBy || r.updatedBy) ? `<div class="detail-section" style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px">
+      <div class="detail-section-title" style="color:var(--muted);font-size:11px">📋 KAYIT BİLGİLERİ</div>
+      ${r.createdBy ? `<p style="font-size:12px;color:var(--muted);margin-bottom:4px">➕ Oluşturan: <b style="color:var(--text)">${esc(r.createdBy)}</b>${r.createdAt ? ' &nbsp;·&nbsp; ' + new Date(r.createdAt).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}</p>` : ''}
+      ${r.updatedBy && r.updatedBy !== r.createdBy ? `<p style="font-size:12px;color:var(--muted)">✏️ Son güncelleyen: <b style="color:var(--text)">${esc(r.updatedBy)}</b>${r.updatedAt ? ' &nbsp;·&nbsp; ' + new Date(r.updatedAt).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}</p>` : ''}
+      ${r.updatedBy && r.updatedBy === r.createdBy && r.updatedAt !== r.createdAt ? `<p style="font-size:12px;color:var(--muted)">✏️ Son güncelleme: <b style="color:var(--text)">${new Date(r.updatedAt).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</b></p>` : ''}
+    </div>` : ''}`;
 
             document.getElementById('header-action-btn').textContent = '+ Yeni Kayıt';
             document.getElementById('header-action-btn').onclick = startNewRecord;
